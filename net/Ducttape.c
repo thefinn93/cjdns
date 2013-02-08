@@ -405,6 +405,10 @@ static inline bool isForMe(struct Message* message, struct Ducttape_pvt* context
     return (Bits_memcmp(header->destinationAddr, context->myAddr.ip6.bytes, 16) == 0);
 }
 
+#include "dht/dhtcore/RouterModule_pvt.h"
+#include "dht/dhtcore/NodeStore_pvt.h"
+#include "dht/dhtcore/NodeHeader.h"
+
 // Called by the TUN device.
 static inline uint8_t incomingFromTun(struct Message* message,
                                       struct Interface* iface)
@@ -463,6 +467,23 @@ static inline uint8_t incomingFromTun(struct Message* message,
         // of the best node to forward to, we can skip doing another lookup by storing a pointer
         // to that node in the context (forwardTo).
     } else {
+        Log_warn(context->logger, "\n\n\n------------DROPPED PACKET-------------");
+        struct NodeStore* np = context->routerModule->nodeStore;
+        Log_warn(context->logger, "NodeStore Capacity: [%d]", np->capacity);
+        Log_warn(context->logger, "NodeStore Size:     [%d]", np->size);
+        Log_warn(context->logger, "NodeStore Capacity: [%d]", np->capacity);
+        Log_warn(context->logger, "NodeStore labelSum: [%d]", np->labelSum);
+
+        for (int i = 0; i < (int)np->size; i++) {
+            uint8_t addr[60];
+            Address_print(addr, &np->nodes[i].address);
+            Log_warn(context->logger,
+                     "Node [%s] reach[%d] addrPrefix[%08x] switchIndex[%u] ver[%u]",
+                     addr, np->headers[i].reach, np->headers[i].addressPrefix,
+                     np->headers[i].switchIndex, np->headers[i].version);
+        }
+
+
         #ifdef Log_WARN
             uint8_t thisAddr[40];
             uint8_t destAddr[40];
@@ -472,6 +493,7 @@ static inline uint8_t incomingFromTun(struct Message* message,
                      "Dropped message from TUN because this node [%s] is closest to dest [%s]",
                      thisAddr, destAddr);
         #endif
+        Log_warn(context->logger, "------------END DROPPED PACKET-------------\n\n\n");
         return Error_UNDELIVERABLE;
     }
 
