@@ -15,7 +15,7 @@
 
 #include "crypto/random/seed/AppleSecRandomCopyBytesRandomSeed.h"
 
-#ifdef OSX
+#if 0
 #include <Security/SecRandom.h>
 #include <inttypes.h>
 
